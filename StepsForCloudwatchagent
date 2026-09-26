@@ -1,0 +1,43 @@
+#install cloudagent
+sudo apt-get update -y
+wget https://amazoncloudwatch-agent.s3.amazonaws.com/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+sudo dpkg -i -E ./amazon-cloudwatch-agent.deb
+sudo systemctl status amazon-cloudwatch-agent
+#run configuration wizard to produce json file
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-config-wizard
+#once enter the wizard select all questions carefully and in final give below 2 file paths one by one
+#/var/log/apache2/access.log
+#/var/log/apache2/error.log
+
+
+#IAM role
+#Cloudwatchagent_ssm_Ec2Instance
+       # │
+       # ├── CloudWatchAgentServerPolicy
+       # └── CloudWatchAgentAdminPolicy
+#go to system mamanger and check if any entry their
+AWS Console → Systems Manager → Parameter Store
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+-a fetch-config \
+-m ec2 \
+-c ssm:AmazonCloudWatch-linux \
+-s
+sudo systemctl status amazon-cloudwatch-agent
+
+#Then comes EC2 #2
+
+This is where the real benefit of SSM becomes clear.
+
+We install the CloudWatch Agent on EC2 #2, but we don't need to create another configuration.
+
+EC2 #2 simply does:
+
+Fetch same configuration
+        ↓
+AmazonCloudWatch-linux
+        ↓
+Start CloudWatch Agent
+
+So let's first get EC2 #1 running and verify its metrics/logs. Then we'll configure EC2 #2 using the exact same SSM parameter.
+
+#Go to cloudwatch metrics now.
